@@ -15,18 +15,14 @@ ProductTag.init(
     product_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'product',
-        key: 'id',
-      }
+      unique: 'uk_productId_tagId', // composite unique key by using same 'unique:' string for multiple columns
+      references: { model: 'product', key: 'id' }
     },
     tag_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'tag',
-        key: 'id',
-      }
+      unique: 'uk_productId_tagId', // composite unique key by using same 'unique:' string for multiple columns
+      references: { model: 'tag', key: 'id' }
     }
   },
   {
