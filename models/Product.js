@@ -17,7 +17,8 @@ Product.init(
     },
     product_name: {
       type: DataTypes.STRING,
-      allowNull: false
+      allowNull: false,
+      unique: true
     },
     price: {
       type: DataTypes.DECIMAL(10, 2),
@@ -33,6 +34,7 @@ Product.init(
     category_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      onDelete: 'CASCADE',
       references: {
         model: 'category',
         key: 'id',

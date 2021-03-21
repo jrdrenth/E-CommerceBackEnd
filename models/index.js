@@ -8,7 +8,7 @@ const ProductTag = require('./ProductTag');
 Product.belongsTo(Category, { foreignKey: 'category_id' });
 
 // Categories have many Products
-Category.hasMany(Product, { foreignKey: 'category_id' });
+Category.hasMany(Product, { foreignKey: 'category_id'});//, onDelete: 'cascade' }); // the cascade onDelete doesn't work here, works when specified in the Product class
 
 
 // ===== Many-to-Many relationship =====
