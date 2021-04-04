@@ -3,6 +3,7 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/tags` endpoint
 
+
 // find all tags
 router.get('/', async (req, res) => {
   // be sure to include its associated Product data
@@ -54,6 +55,7 @@ router.get('/:id', async (req, res) => {
   }
 
 });
+
 
 // create a new tag
 router.post('/', async (req, res) => {
@@ -108,10 +110,64 @@ router.post('/', async (req, res) => {
   }
 });
 
-// update a tag's name by its `id` value
-router.put('/:id', (req, res) => {
 
+// update a tag by its `id` value
+router.put('/:id', async (req, res) => {
+  try {
+    // update product table
+    const [ isTagUpdated ] = await Tag.update(req.body, { where: { id: req.params.id } });
+    var deletedProductTagsCount = 0;
+    var newProductTags = null;
+
+    // update which products this tag is on
+    if (req.body.productIds != null && req.body.productIds.length > 0) {
+      // get current product ids
+      const productTags = await ProductTag.findAll({ where: { tag_id: req.params.id } });
+      const currentTaggedProductIds = productTags.map(({ product_id }) => product_id);
+      
+      // get new product ids
+      const newProductTagArray = req.body.productIds
+        .filter((product_id) => !currentTaggedProductIds.includes(product_id))
+        .map((product_id) => ({ product_id, tag_id: req.params.id }));
+      
+      console.log('currentTaggedProductIds:');
+      console.log(currentTaggedProductIds);
+
+      console.log('newProductTagArray:');
+      console.log(newProductTagArray);
+
+      // get product ids to be deleted
+      const deleteTaggedProductIds = currentTaggedProductIds
+        .filter((product_id) => !req.body.productIds.includes(product_id));
+      
+      console.log('deleteTaggedProductIds:');
+      console.log(deleteTaggedProductIds);
+
+      // add and remove product ids
+      if (newProductTagArray != null && newProductTagArray.length > 0 || deleteTaggedProductIds != null && deleteTaggedProductIds.length > 0) {
+        const updatedProductTags = await Promise.all([
+          ProductTag.destroy({ where: { product_id: deleteTaggedProductIds, tag_id: req.params.id } }),
+          ProductTag.bulkCreate(newProductTagArray)
+        ]);
+
+        deletedProductTagsCount = updatedProductTags[0];
+        newProductTags = updatedProductTags[1];
+      }
+    }
+
+    var result = { 
+      isTagUpdated: isTagUpdated,
+      deletedProductTagsCount: deletedProductTagsCount,
+      newProductTags: newProductTags
+    };
+    res.json(result)
+
+  } catch (err) {
+    console.log(err);
+    res.status(400).json(err);
+  }
 });
+
 
 // delete on tag by its `id` value
 router.delete('/:id', async (req, res) => {
